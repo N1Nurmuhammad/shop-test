@@ -1,0 +1,1 @@
+from django.urls import pathfrom api.v1.shop.views import employee_statistics, all_employees_stat, client_staturlpatterns = [    path('statistics/employee/<int:pk>/', employee_statistics),    path('employee/statistics/', all_employees_stat),    path('statistics/client/<int:pk>', client_stat),]

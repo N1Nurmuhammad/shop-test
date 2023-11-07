@@ -1,0 +1,1 @@
+from rest_framework import serializersclass FilterDateSerializer(serializers.Serializer):    month = serializers.IntegerField()    year = serializers.IntegerField()

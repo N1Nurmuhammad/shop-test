@@ -1,0 +1,1 @@
+from django.db import modelsclass ClientModel(models.Model):    full_name = models.CharField(max_length=255)    birthdate = models.DateField()    def __str__(self):        return f"{self.full_name}"    class Meta:        verbose_name_plural = "Clients"        verbose_name = "Client"        unique_together = ["full_name", "birthdate"]
