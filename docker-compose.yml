@@ -1,6 +1,11 @@
 version: "3"
 
 services:
+  testredis:
+    container_name: testredis
+    image: redis
+    volumes:
+      - redis_data:/data
   testdb:
     container_name: testdb
     restart: unless-stopped
@@ -28,8 +33,23 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     depends_on:
       - testdb
-
+  testworker:
+    container_name: testworker
+    build: .
+    command: 'celery -A core.celery.app worker -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler'
+    volumes:
+      - .:/app
+    depends_on:
+      - testredis
+      - testapp
+  testbeat:
+    container_name: testbeat
+    build: .
+    command: "celery -A core.celery.app beat  -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    depends_on:
+      - testapp
 volumes:
   postgresql:
   static:
+  redis_data:
 #networks:

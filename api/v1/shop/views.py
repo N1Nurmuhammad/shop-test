@@ -5,6 +5,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from api.v1.shop.serializers import ResponseEmployeesStatisticsSerializer, FilterDateSerializer
 from apps.shop.models import *
 
 
@@ -26,9 +27,10 @@ from apps.shop.models import *
 ])
 @api_view(['GET'])
 def employee_statistics(request, pk: int):
-    year = int(request.query_params.get("year"))
-    month = int(request.query_params.get("month"))
-    filter_kwargs = {"date__year": year, "date__month": month}
+    serializer = FilterDateSerializer(data=request.query_params)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.data
+    filter_kwargs = {"date__year": data["year"], "date__month": data["month"]}
     context = {}
     employee_obj = get_object_or_404(EmployeeModel, pk=pk)
     filtered_orders = employee_obj.orders.filter(**filter_kwargs)
@@ -61,12 +63,13 @@ def employee_statistics(request, pk: int):
         description='год',
         required=True
     )
-])
+], responses={200: ResponseEmployeesStatisticsSerializer(many=True)})
 @api_view(['GET'])
 def all_employees_stat(request):
-    year = int(request.query_params.get("year"))
-    month = int(request.query_params.get("month"))
-    filter_kwargs = {"date__year": year, "date__month": month}
+    serializer = FilterDateSerializer(data=request.query_params)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.data
+    filter_kwargs = {"date__year": data["year"], "date__month": data["month"]}
     response = []
     employees = EmployeeModel.objects.all()
     filtered_orders = OrderModel.objects.filter(**filter_kwargs)
@@ -101,10 +104,11 @@ def all_employees_stat(request):
 ])
 @api_view(['GET'])
 def client_stat(request, pk):
+    serializer = FilterDateSerializer(data=request.query_params)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.data
     context = {}
-    year = int(request.query_params.get("year"))
-    month = int(request.query_params.get("month"))
-    filter_kwargs = {"date__year": year, "date__month": month}
+    filter_kwargs = {"date__year": data["year"], "date__month": data["month"]}
     client = get_object_or_404(ClientModel, pk=pk)
     filtered_orders = client.orders.filter(**filter_kwargs)
     context["id"] = client.id
