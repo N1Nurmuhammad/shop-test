@@ -4,10 +4,6 @@ from import_export.admin import ImportExportModelAdmin
 from apps.shop.models import *
 
 
-class MembershipInline(admin.TabularInline):
-    model = OrderModel.products.through
-
-
 @admin.register(ClientModel)
 class ClientModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_filter = ["full_name", "birthdate"]
@@ -30,6 +26,5 @@ class ProductModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 class OrderModelAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_filter = ["client", "employee", "price", "date"]
     search_fields = ["client__name", "employee__name", "price", "date"]
-    raw_id_fields = ["client", "products", "employee"]
+    raw_id_fields = ["client", "employee"]
     date_hierarchy = "date"
-    inlines = [MembershipInline]
