@@ -1,3 +1,22 @@
+import requests
+from decouple import config
 from django.test import TestCase
+from rest_framework import status
 
-# Create your tests here.
+
+class MyAPITestCase(TestCase):
+
+    def test_empoyee_statistics(self):
+        response = requests.get(f'{config("PRODUCTION_HOST")}v1/shop/employee/statistics/?month=11&year=2023', )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_employee_statistics_with_pk(self):
+        response = requests.get(f'{config("PRODUCTION_HOST")}v1/shop/statistics/employee/1?month=11&year=2023', )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_client_statistics_with_pk(self):
+        response = requests.get(f'{config("PRODUCTION_HOST")}v1/shop/statistics/client/1?month=11&year=2023', )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

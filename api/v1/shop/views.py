@@ -1,14 +1,17 @@
-from django.db.models import Sum, Count
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.v1.shop.serializers import ResponseEmployeesStatisticsSerializer, FilterDateSerializer, date_params
+from api.v1.shop.serializers import ResponseEmployeesStatisticsSerializer, FilterDateSerializer, date_params, \
+    ResponseEmployeeStatisticsWithPk, ResponseClientStatisticsSerializer
 from apps.shop.models import *
 
 
-@swagger_auto_schema(tags=['statistics'], method='get', manual_parameters=date_params)
+@swagger_auto_schema(tags=['statistics'], method='get', manual_parameters=date_params,
+                     responses={200: ResponseEmployeeStatisticsWithPk})
 @api_view(['GET'])
 def employee_statistics(request, pk: int):
     context = {}
@@ -29,7 +32,7 @@ def employee_statistics(request, pk: int):
     context["prices_sum"] = prices_sum or 0
     context["products_count"] = products_count or 0
 
-    return Response(context)
+    return Response(context, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(tags=['statistics'], method='get', manual_parameters=date_params,
@@ -59,12 +62,13 @@ def all_employees_stat(request):
         for stat in order_stats
     ]
 
-    return Response(response)
+    return Response(response, status=status.HTTP_200_OK)
 
 
-@swagger_auto_schema(tags=['statistics'], method='get', manual_parameters=date_params)
+@swagger_auto_schema(tags=['statistics'], method='get', manual_parameters=date_params,
+                     responses={200: ResponseClientStatisticsSerializer})
 @api_view(['GET'])
-def client_stat(request, pk):
+def client_stat(request, pk: int):
     serializer = FilterDateSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
     data = serializer.data
@@ -74,7 +78,7 @@ def client_stat(request, pk):
     filtered_orders = client.orders.filter(**filter_kwargs)
     context["id"] = client.id
     context["fullname"] = client.full_name
-    context["products_count"] = filtered_orders.aggregate(
-        products_sum=Sum("products__count")).get("products_sum", 0)
+    context["products_count"] = filtered_orders.annotate(products_count=Count("products")).aggregate(
+        products_sum=Sum("products_count")).get("products_sum", 0)
     context["prices_sum"] = filtered_orders.aggregate(order_price_sum=Sum("price")).get("order_price_sum", 0)
-    return Response(context)
+    return Response(context, status=status.HTTP_200_OK)
