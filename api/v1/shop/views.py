@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from api.v1.shop.serializers import ResponseEmployeesStatisticsSerializer, FilterDateSerializer, date_params, \
     ResponseEmployeeStatisticsWithPk, ResponseClientStatisticsSerializer
+from api.v1.shop.utils import filter_fields
 from apps.shop.models import *
 
 
@@ -18,7 +19,7 @@ def employee_statistics(request, pk: int):
     serializer = FilterDateSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
     data = serializer.data
-    filter_kwargs = {"date__year": data["year"], "date__month": data["month"]}
+    filter_kwargs = filter_fields(data)
     employee_obj = get_object_or_404(EmployeeModel, pk=pk)
     filtered_orders = employee_obj.orders.filter(**filter_kwargs)
     clients_count = filtered_orders.count()
@@ -42,7 +43,7 @@ def all_employees_stat(request):
     serializer = FilterDateSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
     data = serializer.data
-    filter_kwargs = {"date__year": data["year"], "date__month": data["month"]}
+    filter_kwargs = filter_fields(data)
     filtered_orders = OrderModel.objects.filter(**filter_kwargs)
     order_stats = filtered_orders.values("employee__id").annotate(
         unique_clients=Count("client", distinct=True),
@@ -73,7 +74,7 @@ def client_stat(request, pk: int):
     serializer.is_valid(raise_exception=True)
     data = serializer.data
     context = {}
-    filter_kwargs = {"date__year": data["year"], "date__month": data["month"]}
+    filter_kwargs = filter_fields(data)
     client = get_object_or_404(ClientModel, pk=pk)
     filtered_orders = client.orders.filter(**filter_kwargs)
     context["id"] = client.id
