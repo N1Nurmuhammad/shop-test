@@ -21,7 +21,8 @@ def employee_statistics(request, pk: int):
     data = serializer.data
     filter_kwargs = filter_fields(data)
     employee_obj = get_object_or_404(EmployeeModel, pk=pk)
-    filtered_orders = employee_obj.orders.filter(**filter_kwargs)
+    filtered_orders = employee_obj.orders.filter(**filter_kwargs).select_related("client").prefetch_related(
+        "products")
     clients_count = filtered_orders.count()
     unique_client = filtered_orders.distinct("client").count()
     prices_sum = filtered_orders.aggregate(order_price_sum=Sum("price"))["order_price_sum"]
@@ -44,7 +45,8 @@ def all_employees_stat(request):
     serializer.is_valid(raise_exception=True)
     data = serializer.data
     filter_kwargs = filter_fields(data)
-    filtered_orders = OrderModel.objects.filter(**filter_kwargs)
+    filtered_orders = OrderModel.objects.filter(**filter_kwargs).select_related("employee", "client").prefetch_related(
+        "products")
     order_stats = filtered_orders.values("employee__id").annotate(
         unique_clients=Count("client", distinct=True),
         clients=Count("client"),
@@ -76,7 +78,7 @@ def client_stat(request, pk: int):
     context = {}
     filter_kwargs = filter_fields(data)
     client = get_object_or_404(ClientModel, pk=pk)
-    filtered_orders = client.orders.filter(**filter_kwargs)
+    filtered_orders = client.orders.filter(**filter_kwargs).prefetch_related("products")
     context["id"] = client.id
     context["fullname"] = client.full_name
     context["products_count"] = filtered_orders.annotate(products_count=Count("products")).aggregate(
